@@ -94,6 +94,29 @@ export default function Admin() {
   const [importText, setImportText] = useState('')
   const [mockTestTimer, setMockTestTimer] = useState<number>(60)   // Timer state for mock test
 
+  useEffect(() => {
+    const savedTimer = localStorage.getItem('admin_mock_test_timer_minutes')
+    if (!savedTimer) return
+    const parsedTimer = Number(savedTimer)
+    if (!Number.isNaN(parsedTimer) && parsedTimer >= 10) {
+      setMockTestTimer(parsedTimer)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!qMsg?.text.includes('Timer set to')) return
+
+    const normalizedTimer = Number(mockTestTimer)
+    if (Number.isNaN(normalizedTimer) || normalizedTimer < 10) {
+      setQMsg({ type: 'error', text: 'Please enter a valid timer of at least 10 minutes.' })
+      return
+    }
+
+    localStorage.setItem('admin_mock_test_timer_minutes', String(normalizedTimer))
+    alert(`Timer saved successfully for ${normalizedTimer} minutes.`)
+    setQMsg({ type: 'success', text: `Timer saved successfully for ${normalizedTimer} minutes.` })
+  }, [qMsg, mockTestTimer])
+
   // ── Live Session state (for "Enter the link") ─────────────────────────────
   const [liveSessions, setLiveSessions] = useState<FirestoreLiveSession[]>([])
   const [lsLoading, setLsLoading] = useState(false)
@@ -238,6 +261,18 @@ export default function Admin() {
   }
 
   // ── Add live session ──────────────────────────────────────────────────────
+  function handleSaveMockTestTimer() {
+    const normalizedTimer = Number(mockTestTimer)
+    if (Number.isNaN(normalizedTimer) || normalizedTimer < 10) {
+      setQMsg({ type: 'error', text: 'Please enter a valid timer of at least 10 minutes.' })
+      return
+    }
+
+    localStorage.setItem('admin_mock_test_timer_minutes', String(normalizedTimer))
+    setMockTestTimer(normalizedTimer)
+    setQMsg({ type: 'success', text: `Timer saved successfully for ${normalizedTimer} minutes.` })
+  }
+
   async function handleAddLiveSession() {
     if (!newLs.title.trim() || !newLs.meetLink.trim() || !newLs.scheduledAt) {
       setLsMsg({ type: 'error', text: 'Please fill Title, Meet Link and Date/Time.' })
@@ -414,7 +449,7 @@ export default function Admin() {
       {/* Main Overview Dashboard: All admin features as cards/tabs */}
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
 
-        {/* Next Session Card */}
+        {false && (
         <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 border border-indigo-200 dark:border-indigo-700 rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-black text-indigo-700 dark:text-indigo-300">📅 Next Session</h2>
@@ -489,6 +524,7 @@ export default function Admin() {
             </div>
           )}
         </div>
+        )}
 
         {/* Enter Google Meet Link */}
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-2xl p-6">
@@ -573,6 +609,7 @@ export default function Admin() {
 
         {/* ── MOCK TESTS TAB ───────────────────────────────────────────────── */}
         <div className="space-y-4">
+          <h2 className="text-2xl font-black text-gray-900 dark:text-white">Mock Test</h2>
           {/* Set Timer Option - with presets */}
           <div className="flex items-center gap-4 mb-2 flex-wrap">
             <label className="font-bold text-sm text-gray-700 dark:text-gray-200">Set Timer (minutes):</label>
@@ -605,6 +642,11 @@ export default function Admin() {
               </button>
             </div>
           </div>
+          {qMsg?.text.includes('Timer') && (
+            <div className={`p-3 rounded-xl text-sm font-semibold ${qMsg.type === 'success' ? 'bg-green-50 text-green-800 border border-green-300' : 'bg-red-50 text-red-800 border border-red-300'}`}>
+              {qMsg.text}
+            </div>
+          )}
           {/* Sub-tabs */}
           <div className="flex gap-2 flex-wrap">
             {([

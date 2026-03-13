@@ -180,6 +180,25 @@ function SubFolderContent({
     }
   }
 
+  const handleDeleteSelected = async () => {
+    if (selected.size === 0) { alert('Please select files to delete.'); return }
+    const toDelete = items.filter(i => selected.has(i.id))
+    if (!confirm(`Delete ${toDelete.length} selected file(s)?`)) return
+
+    try {
+      for (const item of toDelete) {
+        if (item.storagePath) {
+          try { await deleteObject(ref(storage, item.storagePath)) } catch {}
+        }
+        await deleteDoc(doc(db, 'resources', item.id))
+      }
+      setItems(prev => prev.filter(i => !selected.has(i.id)))
+      setSelected(new Set())
+    } catch (e: any) {
+      alert('Delete failed: ' + e.message)
+    }
+  }
+
   const handleUploadResources = async () => {
     if (uploadFiles.length === 0) { alert('Please select files to upload.'); return }
     setUploading(true)
@@ -243,13 +262,22 @@ function SubFolderContent({
     <div className="px-4 py-3">
       {/* Action Bar */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          onClick={handleDownloadSelected}
-          disabled={selected.size === 0}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-all"
-        >
-          ⬇️ Download Selected ({selected.size})
-        </button>
+        {isAdmin ? (
+          <button
+            onClick={handleDeleteSelected}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-all"
+          >
+            Delete
+          </button>
+        ) : (
+          <button
+            onClick={handleDownloadSelected}
+            disabled={selected.size === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-bold rounded-lg transition-all"
+          >
+            Download Selected ({selected.size})
+          </button>
+        )}
         {isAdmin && (
           <button
             onClick={() => setShowUpload(v => !v)}
@@ -374,21 +402,23 @@ function SubFolderContent({
                       📖 Open
                     </a>
                   )}
-                  <a
-                    href={item.url}
-                    download={item.title}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
-                  >
-                    ⬇️
-                  </a>
+                  {!isAdmin && (
+                    <a
+                      href={item.url}
+                      download={item.title}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                    >
+                      Download
+                    </a>
+                  )}
                   {isAdmin && (
                     <button
                       onClick={() => handleDeleteItem(item)}
                       className="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-lg hover:bg-red-200 transition-all"
                     >
-                      🗑️
+                      Delete
                     </button>
                   )}
                 </div>
@@ -551,3 +581,4 @@ export default function CourseContentPage() {
     </div>
   )
 }
+

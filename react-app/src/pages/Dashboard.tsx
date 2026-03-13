@@ -634,7 +634,6 @@ export default function Dashboard(){
                           <th className="text-left py-3 font-bold text-gray-700">Email</th>
                           <th className="text-left py-3 font-bold text-gray-700">Courses</th>
                           <th className="text-left py-3 font-bold text-gray-700">Status</th>
-                          <th className="text-right py-3 font-bold text-gray-700">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
@@ -650,9 +649,6 @@ export default function Dashboard(){
                               <td className="py-4 text-gray-600">{student.enrolledCourses?.join(', ') || '—'}</td>
                               <td className="py-4">
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${student.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{student.paymentStatus}</span>
-                              </td>
-                              <td className="py-4 text-right">
-                                <button className="text-indigo-600 font-bold text-sm" onClick={() => alert('Edit coming soon!')}>Edit</button>
                               </td>
                             </tr>
                           ))
@@ -766,9 +762,9 @@ export default function Dashboard(){
               <MyCourses enrolledCourses={enrolledCourses} navigate={navigate} />
             )}
 
-            {loading ? (
+            {!isAdmin && (loading ? (
               <div className="space-y-6">
-                {displayStats && !isAdmin ? (
+                {displayStats ? (
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                     <div className="bg-white rounded-xl p-6 border-2 border-gray-200 h-64 animate-pulse"></div>
                   </div>
@@ -850,7 +846,7 @@ export default function Dashboard(){
                   </p>
                 </button>
               </>
-            )}
+            ))}
 
             {!isAdmin && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
