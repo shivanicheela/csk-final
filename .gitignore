@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vite/
+.idea/
+*.log
+.env
+.env.local
+react-app/node_modules/
+react-app/dist/
+react-app/.vite/
+react-app/.env.local
+react-app/.git.backup/
