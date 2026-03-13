@@ -87,9 +87,15 @@ export interface UserEnrollment extends DocumentData {
   id?: string;
   userId: string;
   email: string;
+  fullName?: string;
+  phone?: string;
+  state?: string;
   enrolledCourses: string[]; // Array of course types: 'UPSC', 'TNPSC', 'BOTH'
   paymentStatus: 'paid' | 'pending' | 'failed';
+  paymentMethod?: string;
+  otpVerified?: boolean;
   enrolledAt: any;
+  updatedAt?: any;
   expiresAt?: any;
 }
 
@@ -872,7 +878,14 @@ export const removeAdminRole = async (userId: string) => {
 export const enrollUserInCourse = async (
   userId: string,
   email: string,
-  courseId: string
+  courseId: string,
+  details?: {
+    fullName?: string;
+    phone?: string;
+    state?: string;
+    paymentMethod?: string;
+    otpVerified?: boolean;
+  }
 ): Promise<void> => {
   try {
     const enrollmentRef = doc(db, 'enrollments', userId);
@@ -885,19 +898,33 @@ export const enrollUserInCourse = async (
 
       if (!enrolledCourses.includes(courseId)) {
         enrolledCourses.push(courseId);
-        await updateDoc(enrollmentRef, {
-          enrolledCourses,
-          updatedAt: new Date()
-        });
       }
+
+      await updateDoc(enrollmentRef, {
+        enrolledCourses,
+        email,
+        fullName: details?.fullName || currentData.fullName || '',
+        phone: details?.phone || currentData.phone || '',
+        state: details?.state || currentData.state || '',
+        paymentMethod: details?.paymentMethod || currentData.paymentMethod || '',
+        otpVerified: details?.otpVerified ?? currentData.otpVerified ?? false,
+        paymentStatus: 'paid',
+        updatedAt: new Date()
+      });
     } else {
       // Create new enrollment
       await setDoc(enrollmentRef, {
         userId,
         email,
+        fullName: details?.fullName || '',
+        phone: details?.phone || '',
+        state: details?.state || '',
         enrolledCourses: [courseId],
         paymentStatus: 'paid',
+        paymentMethod: details?.paymentMethod || '',
+        otpVerified: details?.otpVerified ?? false,
         enrolledAt: new Date(),
+        updatedAt: new Date(),
         expiresAt: null
       });
     }
